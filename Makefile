@@ -1,9 +1,9 @@
 CXX=g++
 OPTS=-O0 -fexceptions -g -std=c++0x
-LD=-L/usr/local/lib -lboost_program_options -lmsgpack -lmpio -lmsgpack-rpc
+LD=-L/usr/local/lib -lboost_program_options -lmsgpack -lmpio -lmsgpack-rpc -lboost_thread
 PATH_MSGPACK_RPC=../msgpack-rpc/cpp/src/msgpack/rpc
 TEST_LD= -lpthread $(LD)
-CCLOG_LD=../msgpack-rpc/cpp/src/cclog/*.o
+CCLOG_LD=cclog/*.o
 GTEST_INC= -I$(GTEST_DIR)/include -I$(GTEST_DIR)
 GTEST_DIR=/opt/google/gtest-1.5.0
 GMOCK_DIR=/opt/google/gmock-1.5.0
@@ -13,16 +13,22 @@ NOTIFY=&& notify-send Test success! -i ~/themes/ok_icon.png || notify-send Test 
 SRCS=$(HEADS) $(BODYS)
 MSGPACK_RPC_OBJS=$(PATH_MSGPACK_RPC)/*.o
 
-#target:msgcache
+target:msgcache
+target:client
 #logic_test: logic_test.o gtest_main.a libgmock.a logic_detail.o sg_objects.o
 #	$(CXX) $^ -o $@ $(GTEST_INC) $(TEST_LD) $(OPTS) $(WARNS)  $(CCLOG_LD)
-msgcache: msgcache.o interface.o
-	$(CXX) $^ -o $@ $(LD) $(OPTS) $(WARNS)  $(PATH_MSGPACK_RPC)/*.o -I$(PATH_MSGPACK_RPC)/  $(CCLOG_LD)
+msgcache: msgcache.o interface.o 
+	$(CXX) $^ -o $@ $(LD) $(OPTS) $(WARNS) $(CCLOG_LD)
+client: client.o
+	$(CXX) $^ -o $@ $(LD) $(OPTS) $(WARNS) $(CCLOG_LD)
 
-msgcache.o:msgcache.cc
+msgcache.o:msgcache.cc msgpack_macro.h storage.hpp rwsync.hpp
 	$(CXX) -c $< -o $@ $(OPTS) $(WARNS)
 interface.o:interface.cc
 	$(CXX) -c $< -o $@ $(OPTS) $(WARNS)
+client.o:client.cc
+	$(CXX) -c $< -o $@ $(OPTS) $(WARNS)
+
 # gtest
 gtest_main.o:
 	$(CXX) $(GTEST_INC) -c $(OPTS) $(GTEST_DIR)/src/gtest_main.cc -o $@
